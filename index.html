@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Master Engineer Mini App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Master Engineer Suite</title>
     <!-- Telegram Web App SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
@@ -16,6 +16,8 @@
             --button-text: var(--tg-theme-button-text-color, #ffffff);
             --accent-color: #06b6d4;
             --border-color: #334155;
+            --chat-user-bg: #2563eb;
+            --chat-bot-bg: #334155;
         }
 
         body {
@@ -24,22 +26,17 @@
             color: var(--text-color);
             margin: 0;
             padding: 16px;
+            padding-bottom: 90px; /* Space for bottom nav */
             box-sizing: border-box;
         }
 
-        .header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 16px;
-        }
-
         h2 {
-            margin: 0;
+            margin-top: 0;
             font-size: 1.25rem;
             display: flex;
             align-items: center;
             gap: 8px;
+            color: var(--text-color);
         }
 
         .card {
@@ -69,7 +66,7 @@
             margin-bottom: 4px;
         }
 
-        input, select {
+        input, select, textarea {
             width: 100%;
             padding: 10px;
             border-radius: 8px;
@@ -79,9 +76,10 @@
             font-size: 1rem;
             box-sizing: border-box;
             outline: none;
+            font-family: inherit;
         }
 
-        input:focus, select:focus {
+        input:focus, select:focus, textarea:focus {
             border-color: var(--accent-color);
         }
 
@@ -113,29 +111,99 @@
             line-height: 1.4;
         }
 
-        .tabs {
+        /* Chat UI Styles */
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 180px);
+            min-height: 400px;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 4px;
+            margin-bottom: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .message {
+            max-width: 85%;
+            padding: 10px 14px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+
+        .message.user {
+            background-color: var(--chat-user-bg);
+            color: #ffffff;
+            align-self: flex-end;
+            border-bottom-right-radius: 2px;
+        }
+
+        .message.bot {
+            background-color: var(--chat-bot-bg);
+            color: var(--text-color);
+            align-self: flex-start;
+            border-bottom-left-radius: 2px;
+            border: 1px solid var(--border-color);
+        }
+
+        .chat-input-area {
             display: flex;
             gap: 8px;
-            margin-bottom: 16px;
         }
 
-        .tab {
-            flex: 1;
-            padding: 10px;
-            text-align: center;
+        .chat-input-area textarea {
+            resize: none;
+            height: 46px;
+            padding: 12px 10px;
+        }
+
+        .chat-input-area button {
+            width: 80px;
+            margin-top: 0;
+            height: 46px;
+        }
+
+        /* Bottom Navigation Menu */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
             background: var(--card-bg);
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 0.85rem;
-            font-weight: 500;
-            border: 1px solid var(--border-color);
-            color: var(--hint-color);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-around;
+            padding: 6px 0;
+            z-index: 1000;
         }
 
-        .tab.active {
-            border-color: var(--accent-color);
+        .nav-item {
+            flex: 1;
+            text-align: center;
+            background: none;
+            border: none;
+            color: var(--hint-color);
+            font-size: 0.65rem;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .nav-item span.icon {
+            font-size: 1.1rem;
+        }
+
+        .nav-item.active {
             color: var(--accent-color);
-            background: rgba(6, 182, 212, 0.05);
         }
 
         .tab-content {
@@ -145,39 +213,71 @@
         .tab-content.active {
             display: block;
         }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
     </style>
 </head>
 <body>
 
-    <div class="header">
+    <!-- TAB 1: HOME / DASHBOARD -->
+    <div id="home" class="tab-content active">
         <h2>⚙️ Master Engineer Suite</h2>
+        <div class="card">
+            <h3>Welcome, Engineer!</h3>
+            <p style="color: var(--hint-color); font-size: 0.9rem; margin-top: 0;">
+                Your mobile computational workspace and AI assistant. Select a tool or open the AI chat to ask technical questions.
+            </p>
+        </div>
+        <div class="card">
+            <h3>Quick Launch Tools</h3>
+            <div class="grid-2">
+                <button class="btn" onclick="switchTab('chat')">💬 AI Assistant</button>
+                <button class="btn" onclick="switchTab('structural')">🏗️ Structural</button>
+                <button class="btn" onclick="switchTab('electrical')">⚡ Electrical</button>
+                <button class="btn" onclick="switchTab('fluids')">💧 Fluids</button>
+            </div>
+        </div>
     </div>
 
-    <!-- Tab Navigation -->
-    <div class="tabs">
-        <div class="tab active" onclick="switchTab('beam')">Beam Calculator</div>
-        <div class="tab" onclick="switchTab('converter')">Unit Converter</div>
-        <div class="tab" onclick="switchTab('ohms')">Ohm's Law</div>
+    <!-- TAB 2: AI CHAT ASSISTANT -->
+    <div id="chat" class="tab-content">
+        <h2>💬 Master Engineer AI Chat</h2>
+        <div class="card chat-container">
+            <div id="chatMessages" class="chat-messages">
+                <div class="message bot">
+                    Hello, Engineer! 👋 Ask me any technical question about beam mechanics, electrical circuits, fluid flow, or material properties.
+                </div>
+            </div>
+            <div class="chat-input-area">
+                <textarea id="chatInput" placeholder="Type your engineering question..."></textarea>
+                <button class="btn" onclick="sendQuestion()">Send</button>
+            </div>
+        </div>
     </div>
 
-    <!-- Tab 1: Beam Deflection Calculator -->
-    <div id="beam" class="tab-content active">
+    <!-- TAB 3: STRUCTURAL MECHANICS -->
+    <div id="structural" class="tab-content">
+        <h2>🏗️ Structural Mechanics</h2>
         <div class="card">
             <h3>Simply Supported Beam Deflection</h3>
             <div class="input-group">
-                <label for="force">Load Force (P in Newtons):</label>
+                <label>Load Force ($P$ in Newtons):</label>
                 <input type="number" id="force" value="1000">
             </div>
             <div class="input-group">
-                <label for="length">Beam Length (L in meters):</label>
+                <label>Beam Length ($L$ in meters):</label>
                 <input type="number" id="length" value="3">
             </div>
             <div class="input-group">
-                <label for="inertia">Moment of Inertia (I in m⁴):</label>
+                <label>Moment of Inertia ($I$ in $m^4$):</label>
                 <input type="number" id="inertia" value="0.00005" step="0.00001">
             </div>
             <div class="input-group">
-                <label for="modulus">Elastic Modulus (E in GPa):</label>
+                <label>Elastic Modulus ($E$ in GPa):</label>
                 <input type="number" id="modulus" value="200">
             </div>
             <button class="btn" onclick="calculateBeam()">Calculate Deflection</button>
@@ -185,71 +285,181 @@
         </div>
     </div>
 
-    <!-- Tab 2: Pressure & Unit Converter -->
-    <div id="converter" class="tab-content">
-        <div class="card">
-            <h3>Pressure / Stress Converter</h3>
-            <div class="input-group">
-                <label for="mpaInput">Value in MegaPascals (MPa):</label>
-                <input type="number" id="mpaInput" value="10" oninput="convertPressure()">
-            </div>
-            <div id="pressureResult" class="result">
-                Equivalent: 10,000 kPa | 1,450.38 psi | 98.69 atm
-            </div>
-        </div>
-    </div>
-
-    <!-- Tab 3: Electrical Engineering (Ohm's Law) -->
-    <div id="ohms" class="tab-content">
+    <!-- TAB 4: ELECTRICAL ENGINEERING -->
+    <div id="electrical" class="tab-content">
+        <h2>⚡ Electrical Engineering</h2>
         <div class="card">
             <h3>Ohm's Law & Power Calculator</h3>
             <div class="input-group">
-                <label for="voltage">Voltage (V in Volts):</label>
-                <input type="number" id="voltage" value="12" oninput="calculateOhms()">
+                <label>Voltage ($V$ in Volts):</label>
+                <input type="number" id="voltage" value="24" oninput="calculateOhms()">
             </div>
             <div class="input-group">
-                <label for="resistance">Resistance (R in Ohms Ω):</label>
-                <input type="number" id="resistance" value="4" oninput="calculateOhms()">
+                <label>Resistance ($R$ in Ohms $\Omega$):</label>
+                <input type="number" id="resistance" value="8" oninput="calculateOhms()">
             </div>
             <div id="ohmsResult" class="result">
-                Current (I): 3.00 A | Power (P): 36.00 W
+                Current ($I$): 3.00 A | Power ($P$): 72.00 W
             </div>
         </div>
     </div>
 
+    <!-- TAB 5: FLUID MECHANICS -->
+    <div id="fluids" class="tab-content">
+        <h2>💧 Fluid Mechanics</h2>
+        <div class="card">
+            <h3>Reynolds Number Estimator ($Re$)</h3>
+            <div class="input-group">
+                <label>Flow Velocity ($v$ in m/s):</label>
+                <input type="number" id="fluidVel" value="2.5" oninput="calculateReynolds()">
+            </div>
+            <div class="input-group">
+                <label>Characteristic Diameter ($D$ in meters):</label>
+                <input type="number" id="pipeDiam" value="0.1" oninput="calculateReynolds()">
+            </div>
+            <div class="input-group">
+                <label>Kinematic Viscosity ($\nu$ in $m^2/s$):</label>
+                <input type="number" id="viscosity" value="0.000001" step="0.0000001" oninput="calculateReynolds()">
+            </div>
+            <div id="reynoldsResult" class="result">
+                Reynolds Number ($Re$): 250,000 (Turbulent Flow)
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 6: MATERIAL PROPERTIES DATABASE -->
+    <div id="materials" class="tab-content">
+        <h2>📐 Material Database</h2>
+        <div class="card">
+            <h3>Select Engineering Material</h3>
+            <div class="input-group">
+                <label>Material Grade:</label>
+                <select id="materialSelect" onchange="updateMaterialInfo()">
+                    <option value="steel">Structural Steel (A36)</option>
+                    <option value="aluminum">Aluminum Alloy (6061-T6)</option>
+                    <option value="titanium">Titanium Grade 5 (Ti-6Al-4V)</option>
+                    <option value="copper">Pure Copper (C11000)</option>
+                </select>
+            </div>
+            <div id="materialResult" class="result">
+                <strong>Density:</strong> 7,850 kg/m³<br>
+                <strong>Yield Strength:</strong> 250 MPa<br>
+                <strong>Elastic Modulus ($E$):</strong> 200 GPa
+            </div>
+        </div>
+    </div>
+
+    <!-- BOTTOM NAVIGATION MENU -->
+    <nav class="bottom-nav">
+        <button class="nav-item active" onclick="switchTab('home')">
+            <span class="icon">🏠</span>
+            <span>Home</span>
+        </button>
+        <button class="nav-item" onclick="switchTab('chat')">
+            <span class="icon">💬</span>
+            <span>AI Chat</span>
+        </button>
+        <button class="nav-item" onclick="switchTab('structural')">
+            <span class="icon">🏗️</span>
+            <span>Structural</span>
+        </button>
+        <button class="nav-item" onclick="switchTab('electrical')">
+            <span class="icon">⚡</span>
+            <span>Electrical</span>
+        </button>
+        <button class="nav-item" onclick="switchTab('fluids')">
+            <span class="icon">💧</span>
+            <span>Fluids</span>
+        </button>
+        <button class="nav-item" onclick="switchTab('materials')">
+            <span class="icon">📐</span>
+            <span>Materials</span>
+        </button>
+    </nav>
+
     <script>
-        // Initialize Telegram Web App SDK
+        // Initialize Telegram Web App
         let tg = window.Telegram ? window.Telegram.WebApp : null;
         if (tg) {
             tg.expand();
             tg.ready();
         }
 
-        // Tab Navigation Logic
+        // Tab Switching Logic
         function switchTab(tabId) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            
-            const selectedTab = Array.from(document.querySelectorAll('.tab')).find(
-                t => t.getAttribute('onclick').includes(tabId)
-            );
-            if (selectedTab) selectedTab.classList.add('active');
-            
-            const selectedContent = document.getElementById(tabId);
-            if (selectedContent) selectedContent.classList.add('active');
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+            document.getElementById(tabId).classList.add('active');
+
+            const tabOrder = ['home', 'chat', 'structural', 'electrical', 'fluids', 'materials'];
+            const targetIndex = tabOrder.indexOf(tabId);
+            const navButtons = document.querySelectorAll('.nav-item');
+            if (targetIndex !== -1 && navButtons[targetIndex]) {
+                navButtons[targetIndex].classList.add('active');
+            }
+
+            window.scrollTo(0, 0);
         }
 
-        // Beam Calculation Logic: δ = (P * L³) / (48 * E * I)
+        // AI Chat Handler & Knowledge Base
+        function sendQuestion() {
+            const inputField = document.getElementById('chatInput');
+            const question = inputField.value.trim();
+            if (!question) return;
+
+            const chatMessages = document.getElementById('chatMessages');
+
+            // Append User Message
+            const userMsg = document.createElement('div');
+            userMsg.className = 'message user';
+            userMsg.textContent = question;
+            chatMessages.appendChild(userMsg);
+
+            inputField.value = '';
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+
+            // Simulate AI Engineering Answer Generation
+            setTimeout(() => {
+                const botMsg = document.createElement('div');
+                botMsg.className = 'message bot';
+                botMsg.innerHTML = getEngineeringAnswer(question);
+                chatMessages.appendChild(botMsg);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }, 600);
+        }
+
+        function getEngineeringAnswer(q) {
+            const lower = q.toLowerCase();
+            
+            if (lower.includes('beam') || lower.includes('deflection') || lower.includes('bending')) {
+                return "📊 **Beam Bending Insight:** For a simply supported beam with center load $P$, max deflection is $\\delta = \\frac{P L^3}{48 E I}$. You can calculate this precisely using the **Structural** tab below!";
+            }
+            if (lower.includes('ohm') || lower.includes('voltage') || lower.includes('current') || lower.includes('resistance')) {
+                return "⚡ **Ohm's Law:** Current ($I$) equals Voltage ($V$) divided by Resistance ($R$) ($I = \\frac{V}{R}$). Power ($P$) equals $V \\times I$. Try our **Electrical** tab for instant calculations.";
+            }
+            if (lower.includes('reynolds') || lower.includes('fluid') || lower.includes('pipe') || lower.includes('flow')) {
+                return "💧 **Fluid Flow / Reynolds Number:** $Re = \\frac{v D}{\\nu}$. Values below 2,300 indicate laminar flow, while values above 4,000 indicate turbulent flow. Check the **Fluids** tab to test parameters!";
+            }
+            if (lower.includes('steel') || lower.includes('aluminum') || lower.includes('material') || lower.includes('density')) {
+                return "📐 **Materials:** Structural steel (A36) has a density of $7,850 \\text{ kg/m}^3$ and yield strength around $250 \\text{ MPa}$. Review our **Materials** tab for a quick breakdown of common engineering metals.";
+            }
+
+            return `🛠️ **Master Engineer AI:** You asked: _"${q}"_. As your technical assistant, I recommend checking the relevant dedicated tool tab (Structural, Electrical, Fluids, or Materials) or refining your query for specific formula computations!`;
+        }
+
+        // Calculator functions
         function calculateBeam() {
             const P = parseFloat(document.getElementById('force').value);
             const L = parseFloat(document.getElementById('length').value);
             const I = parseFloat(document.getElementById('inertia').value);
             const E_gpa = parseFloat(document.getElementById('modulus').value);
-            
-            const E = E_gpa * 1e9; // GPa to Pascals
+            const E = E_gpa * 1e9;
 
             if (!P || !L || !I || !E) {
-                alert('Please fill out all fields with valid numbers.');
+                alert('Please check input values.');
                 return;
             }
 
@@ -258,44 +468,46 @@
 
             const resDiv = document.getElementById('beamResult');
             resDiv.style.display = 'block';
-            resDiv.innerHTML = `<strong>Max Deflection:</strong> ${deflectionMm.toFixed(4)} mm<br>` +
-                               `<small>(${deflection.toExponential(4)} m)</small>`;
+            resDiv.innerHTML = `<strong>Max Deflection:</strong> ${deflectionMm.toFixed(4)} mm<br><small>(${deflection.toExponential(4)} m)</small>`;
 
-            if (tg && tg.HapticFeedback) {
-                tg.HapticFeedback.notificationOccurred('success');
-            }
+            if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
         }
 
-        // Pressure Converter Logic
-        function convertPressure() {
-            const mpa = parseFloat(document.getElementById('mpaInput').value) || 0;
-            const kpa = mpa * 1000;
-            const psi = mpa * 145.038;
-            const atm = mpa * 9.86923;
-
-            document.getElementById('pressureResult').innerHTML = 
-                `<strong>Equivalent Values:</strong><br>` +
-                `• ${kpa.toLocaleString()} kPa<br>` +
-                `• ${psi.toFixed(2)} psi<br>` +
-                `• ${atm.toFixed(2)} atm`;
-        }
-
-        // Ohm's Law Calculator Logic: I = V / R, P = V * I
         function calculateOhms() {
             const V = parseFloat(document.getElementById('voltage').value) || 0;
             const R = parseFloat(document.getElementById('resistance').value) || 0;
-
             if (R === 0) {
                 document.getElementById('ohmsResult').innerHTML = `<strong>Current (I):</strong> Infinite (Short Circuit)`;
                 return;
             }
-
             const I = V / R;
             const P = V * I;
+            document.getElementById('ohmsResult').innerHTML = `Current ($I$): ${I.toFixed(2)} A | Power ($P$): ${P.toFixed(2)} W`;
+        }
 
-            document.getElementById('ohmsResult').innerHTML = 
-                `<strong>Current (I):</strong> ${I.toFixed(2)} A<br>` +
-                `<strong>Power (P):</strong> ${P.toFixed(2)} W`;
+        function calculateReynolds() {
+            const v = parseFloat(document.getElementById('fluidVel').value) || 0;
+            const D = parseFloat(document.getElementById('pipeDiam').value) || 0;
+            const nu = parseFloat(document.getElementById('viscosity').value) || 1e-6;
+            const Re = (v * D) / nu;
+            let regime = Re < 2300 ? "Laminar Flow" : (Re < 4000 ? "Transitional Flow" : "Turbulent Flow");
+            document.getElementById('reynoldsResult').innerHTML = `Reynolds Number ($Re$): <strong>${Re.toLocaleString(undefined, {maximumFractionDigits: 0})}</strong> (${regime})`;
+        }
+
+        const materialsData = {
+            steel: { density: "7,850 kg/m³", yield: "250 MPa", modulus: "200 GPa" },
+            aluminum: { density: "2,700 kg/m³", yield: "276 MPa", modulus: "68.9 GPa" },
+            titanium: { density: "4,430 kg/m³", yield: "880 MPa", modulus: "114 GPa" },
+            copper: { density: "8,960 kg/m³", yield: "70 MPa", modulus: "117 GPa" }
+        };
+
+        function updateMaterialInfo() {
+            const matKey = document.getElementById('materialSelect').value;
+            const mat = materialsData[matKey];
+            document.getElementById('materialResult').innerHTML = 
+                `<strong>Density:</strong> ${mat.density}<br>` +
+                `<strong>Yield Strength:</strong> ${mat.yield}<br>` +
+                `<strong>Elastic Modulus ($E$):</strong> ${mat.modulus}`;
         }
     </script>
 </body>
